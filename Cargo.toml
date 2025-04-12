@@ -1,0 +1,14 @@
+[package]
+name = "dioxus-google-fonts"
+version = "0.1.1"
+edition = "2024"
+description = "A declarative Google Fonts embedding for Dioxus"
+license = "MIT OR Apache-2.0"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2.0", features = ["full"] }
+quote = "1"
+proc-macro2 = "1"
