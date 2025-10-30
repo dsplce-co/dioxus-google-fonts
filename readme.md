@@ -1,3 +1,5 @@
+> We're dsplce.co, check out our work on [github.com/dsplce-co](https://github.com/dsplce-co) 🖤
+
 # dioxus-google-fonts
 
 > 💅 Declarative Google Fonts embedding for [Dioxus](https://dioxuslabs.com) — done right.
