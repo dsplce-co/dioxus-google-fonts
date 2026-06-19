@@ -1,58 +1,92 @@
-> We're dsplce.co, check out our work on [github.com/dsplce-co](https://github.com/dsplce-co) 🖤
+> We're dsplce.co, check out our work on our website: [dsplce.co](https://dsplce.co) 🖤
 
 # dioxus-google-fonts
 
-> 💅 Declarative Google Fonts embedding for [Dioxus](https://dioxuslabs.com) — done right.
+[![Dioxus](https://img.shields.io/badge/Dioxus-000000?style=for-the-badge&logo=rust&logoColor=white)](https://dioxuslabs.com/)
+[![crates.io downloads](https://img.shields.io/crates/d/dioxus-google-fonts?style=for-the-badge&color=%23FF0346)](https://crates.io/crates/dioxus-google-fonts)
+[![crates.io size](https://img.shields.io/crates/size/dioxus-google-fonts?style=for-the-badge)](https://crates.io/crates/dioxus-google-fonts)
+[![License](https://img.shields.io/crates/l/dioxus-google-fonts.svg?style=for-the-badge)](https://crates.io/crates/dioxus-google-fonts)
+[![crates.io](https://img.shields.io/crates/v/dioxus-google-fonts?style=for-the-badge&color=%230F80C1)](https://crates.io/crates/dioxus-google-fonts)
 
-This crate provides two declarative macros for working with [Google Fonts](https://fonts.google.com) in a **Dioxus** app:
+💅 Declarative [Google Fonts](https://fonts.google.com) embedding for [Dioxus](https://dioxuslabs.com) — done at compile time, the way you'd want it.
 
-- `google_fonts_url!` — generates the Google Fonts `<link>` URL
-- `google_fonts!` — renders an actual `document::Link` node for easy use in `rsx!`
+`dioxus-google-fonts` gives you two macros so you never hand-write a `fonts.googleapis.com` URL again — you declare the families, weights and italics you want, and the right `<link>` falls out at compile time.
+
+- `google_fonts_url!` — builds the Google Fonts URL (a plain `&'static str`)
+- `google_fonts!` — renders a ready-to-drop `document::Link` node for `rsx!`
 
 ---
 
 ## 🖤 Features
 
-✅ Links are generated at compile time<br>
-✅ Declarative macro syntax  
-✅ Supports multiple fonts, weights and italics  
-✅ Auto-generates `ital,wght@...` combinations  
-✅ Automatically adds `display=swap`  
-✅ Works out of the box with **Dioxus Web + SSR**
+- **Built at compile time** — the URL is baked into the binary as a `&'static str`; zero runtime cost, no string-fiddling
+- **Declarative, tuple-based syntax** — declare families, weights and italics; the macro writes the URL
+- **Multiple fonts in one call** — weights and italics across as many families as you like
+- **Axis string generated for you** — the fiddly `wght@...` / `ital,wght@...` part is assembled automatically
+- **`display=swap` by default** — the sensible default you'd otherwise forget, always appended
+- **Web + SSR** — works out of the box with Dioxus on both
 
 ---
+
+## Table of Contents
+
+- [🖤 Features](#-features)
+- [📦 Installation](#-installation)
+- [🧪 Usage](#-usage)
+  - [Generate a Google Fonts URL](#generate-a-google-fonts-url)
+  - [Drop a `<link>` straight into `rsx!`](#drop-a-link-straight-into-rsx)
+- [🧠 Syntax](#-syntax)
+  - [A note on `ital`](#a-note-on-ital)
+- [🛠️ Compatibility](#%EF%B8%8F-compatibility)
+- [📁 Repo & Contributions](#-repo--contributions)
+- [📄 License](#-license)
+
+⸻
 
 ## 📦 Installation
 
-Add to your `Cargo.toml`:
+Add it with cargo:
 
-```toml
-# In your main Dioxus app
-dioxus-google-fonts = "0.1"
-
-# This is a procedural macro crate, it will bring in `proc-macro2`, `syn`, etc.
+```bash
+cargo add dioxus-google-fonts
 ```
 
----
+Or drop it into your `Cargo.toml` by hand:
 
-## 🧪 Example
+```toml
+[dependencies]
+dioxus-google-fonts = "0.1"
+```
+
+It's a procedural-macro crate, so it quietly pulls in `syn`, `quote` and `proc-macro2` — nothing for you to wire up. It carries **no `dioxus` dependency of its own**, so a single version works across Dioxus releases — see the [compatibility table](#%EF%B8%8F-compatibility).
+
+⸻
+
+## 🧪 Usage
+
+### Generate a Google Fonts URL
+
+`google_fonts_url!` expands to a string literal, so there's nothing to evaluate at runtime — what you see is what ends up in the binary:
 
 ```rust
 use dioxus_google_fonts::google_fonts_url;
 
-fn main() -> Element {
-    let url = google_fonts_url!([
-        ("Roboto", wght = [400, 700], ital = [(1, 700)]),
-        ("Manrope", wght = ["200..800"])
-    ]);
-    
-    assert_eq!(
-        url,
-        "https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Manrope:wght@200..800&display=swap"
-    );
-}
+let url = google_fonts_url!([
+    ("Open Sans", wght = [400, 700]),
+    ("Mukta", wght = ["200..900"])
+]);
+
+assert_eq!(
+    url,
+    "https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&family=Mukta:wght@200..900&display=swap"
+);
 ```
 
+Spaces in font names are handled for you (`Open Sans` → `Open+Sans`), and `display=swap` is appended whether you remember it or not.
+
+### Drop a `<link>` straight into `rsx!`
+
+`google_fonts!` wraps the URL in a `document::Link`, so you can embed it directly in your component — no manual `<link rel="stylesheet">` plumbing:
 
 ```rust
 use dioxus::prelude::*;
@@ -61,7 +95,7 @@ use dioxus_google_fonts::google_fonts;
 fn App() -> Element {
     rsx! {
         { google_fonts!([
-            ("Roboto", wght = [400, 700], ital = [(1, 700)]),
+            ("Roboto", ital = [(0, 400), (1, 700)]),
             ("Mukta", wght = ["200..900"])
         ]) }
 
@@ -70,46 +104,60 @@ fn App() -> Element {
 }
 
 fn main() {
-    dioxus::web::launch(App);
+    dioxus::launch(App);
 }
 ```
 
----
+⸻
 
-## 🧠 Supported Syntax
+## 🧠 Syntax
 
-Each font entry uses a tuple-like DSL:
+Each font is a tuple — a name, then any axes you want:
 
 ```rust
 ("Font Name", wght = [weights...], ital = [(italic_flag, weight)...])
 ```
 
-- `wght`: weights, as numbers (`400`, `700`) or ranges (`"200..800"`)
-- `ital`: tuples like `(1, 700)` → italic, weight
-- `ital,wght@...` style gets auto-generated
-- `display=swap` is always added to the URL (sensible default)
+- `wght` — weights as integers (`400`, `700`) or range strings (`"200..900"`)
+- `ital` — tuples of `(italic_flag, weight)`, e.g. `(0, 400)` for upright, `(1, 700)` for bold italic
+- the `wght@...` / `ital,wght@...` axis string is generated for you
+- `display=swap` is always tacked onto the final URL
 
----
+### A note on `ital`
 
-## 🧱 Example Output
+Heads up — right now `ital` and `wght` don't get merged into one combined `ital,wght@0,400;1,700` axis. The moment a family has an `ital` list, **those tuples become the source of truth** for it, and any standalone `wght` numbers on that same family are ignored. So put *every* weight you want — upright and italic alike — into the `ital` list:
 
-```text
-https://fonts.googleapis.com/css2?
-  family=Roboto:ital,wght@1,700&
-  family=Manrope:wght@200..800&
-  display=swap
+```rust
+// Roboto: regular 400 + bold italic 700
+google_fonts_url!([
+    ("Roboto", ital = [(0, 400), (1, 700)])
+]);
+// → ...family=Roboto:ital,wght@0,400;1,700&display=swap
 ```
 
----
+Use `wght` on its own when you don't need italics, and `ital` on its own when you do.
+
+⸻
+
+## 🛠️ Compatibility
+
+| Dioxus version | `dioxus-google-fonts` version |
+|:---------------|:------------------------------|
+| `0.7`          | `0.1`                         |
+| `0.6`          | `0.1`                         |
+
+Built on **Rust edition 2024**.
+
+⸻
 
 ## 📁 Repo & Contributions
 
-📦 Crate: [crates.io/crates/dioxus-google-fonts](https://crates.io/crates/dioxus-google-fonts)  
-🛠️ Repo: [github.com/dsplce-co/dioxus-google-fonts](https://github.com/dsplce-co/dioxus-google-fonts)
+🛠️ **Repo**: [https://github.com/dsplce-co/dioxus-google-fonts](https://github.com/dsplce-co/dioxus-google-fonts)<br>
+📦 **Crate**: [https://crates.io/crates/dioxus-google-fonts](https://crates.io/crates/dioxus-google-fonts)
 
-PRs welcome! Let’s make Dioxus + typography best friends. 🖤
+PRs welcome — let's make Dioxus and typography best friends. 🖤
 
----
+⸻
 
 ## 📄 License
 
